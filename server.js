@@ -10,7 +10,7 @@ import fileUploadRoutes from './routes/fileUploadRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import examRoutes from './routes/examRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
-import passport from 'passport';
+import passport from './config/passport.js';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import User from './models/userModel.js';
@@ -77,12 +77,12 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
 
-// Passport configuration
+// Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -105,7 +105,7 @@ app.use((req, res, next) => {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5173',
-    process.env.FRONTEND_URL // Use the same frontend URL from env
+    process.env.FRONTEND_URL
   ];
   
   const origin = req.headers.origin;
@@ -117,7 +117,6 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
   
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
