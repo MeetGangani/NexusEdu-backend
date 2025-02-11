@@ -5,19 +5,20 @@
   "description": "MERN authentication system",
   "main": "server.js",
   "scripts": {
-  "start": "node server.js",
-  "server": "nodemon server.js",
-  "client": "npm run dev --prefix frontend",
-  "dev": "concurrently \"npm run server\" \"npm run client\""
-},
-"engines": {
-  "node": "20.x"
-},
+    "start": "node server.js",
+    "server": "nodemon server.js",
+    "client": "npm run dev --prefix frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "engines": {
+    "node": "20.x"
+  },
   "author": "Brad Traversy",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
+    "connect-mongo": "^5.1.0",
     "cookie-parser": "^1.4.6",
     "crypto-js": "^4.2.0",
     "dotenv": "^16.0.3",

@@ -12,27 +12,38 @@ import examRoutes from './routes/examRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import passport from 'passport';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import User from './models/userModel.js';
 
+// Load environment variables
 dotenv.config();
 
+// Connect to MongoDB
 connectDB();
 
 const app = express();
 
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use(cookieParser());
 
+// Session Setup (Fix MemoryStore Warning)
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: 'sessions',
+  }),
 }));
+
+// Passport Initialization
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Passport Serialize & Deserialize User
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
@@ -46,6 +57,7 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
+// API Routes
 app.use('/api/users', userRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/upload', fileUploadRoutes);
@@ -53,6 +65,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/contact', contactRoutes);
 
+// Serve Frontend in Production
 if (process.env.NODE_ENV === 'production') {
   const __dirname = path.resolve();
   app.use(express.static(path.join(__dirname, '/frontend/dist')));
@@ -66,9 +79,10 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Error Handlers
 app.use(notFound);
 app.use(errorHandler);
 
+// Start Server
 const port = process.env.PORT || 5000;
-
-app.listen(port, () => console.log(`Server started on port ${port}`));
+app.listen(port, () => console.log(`🚀 Server started on port ${port}`));
