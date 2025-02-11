@@ -1,4 +1,5 @@
 import express from 'express';
+import { protect, studentOnly } from '../middleware/authMiddleware.js';
 import {
   getAvailableExams,
   startExam,
@@ -7,17 +8,19 @@ import {
   getMyResults,
   getExamResults
 } from '../controllers/examController.js';
-import { protect, studentOnly } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Student routes - protected and student only
-router.get('/my-results', protect, studentOnly, getMyResults);
-router.post('/start', protect, studentOnly, startExam);
-router.post('/submit', protect, studentOnly, submitExam);
+// Apply protect middleware first, then studentOnly
+router.use(protect); // This will protect all routes below
+
+// Student-only routes
+router.get('/my-results', studentOnly, getMyResults);
+router.post('/start', studentOnly, startExam);
+router.post('/submit', studentOnly, submitExam);
 
 // Institute routes
-router.get('/results/:examId', protect, getExamResults);
-router.post('/release/:examId', protect, releaseResults);
+router.get('/results/:examId', getExamResults);
+router.post('/release/:examId', releaseResults);
 
 export default router; 
