@@ -79,16 +79,17 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
       secure: process.env.NODE_ENV === 'production'
     });
     
-    // Redirect to frontend
-    const frontendURL = process.env.NODE_ENV === 'production' 
-      ? 'https://your-frontend-url.com'  // Replace with your production frontend URL
-      : 'http://localhost:3000';
+    // Get the correct frontend URL based on environment
+    const frontendURL = process.env.NODE_ENV === 'production'
+      ? process.env.FRONTEND_URL  // Use environment variable in production
+      : 'http://localhost:3000';  // Default development URL
     
+    // Redirect to frontend with success parameter
     res.redirect(`${frontendURL}/?loginSuccess=true`);
   } catch (error) {
     console.error('Google auth callback error:', error);
     const frontendURL = process.env.NODE_ENV === 'production'
-      ? 'https://your-frontend-url.com'  // Replace with your production frontend URL
+      ? process.env.FRONTEND_URL
       : 'http://localhost:3000';
     res.redirect(`${frontendURL}/login?error=auth_failed`);
   }

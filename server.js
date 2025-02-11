@@ -52,9 +52,8 @@ app.use(helmet({
       connectSrc: [
         "'self'",
         "https://accounts.google.com",
-        process.env.NODE_ENV === 'production' 
-          ? 'your-frontend-domain.com'
-          : 'http://localhost:3000'
+        process.env.FRONTEND_URL,
+        'http://localhost:3000'  // for development
       ],
       frameSrc: ["'self'", "https://accounts.google.com"],
       objectSrc: ["'none'"],
@@ -106,7 +105,7 @@ app.use((req, res, next) => {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5173',
-    'https://your-frontend-domain.com' // Add your production frontend URL
+    process.env.FRONTEND_URL // Use the same frontend URL from env
   ];
   
   const origin = req.headers.origin;
