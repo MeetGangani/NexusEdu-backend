@@ -32,15 +32,13 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Check if user already exists
         let user = await User.findOne({ email: profile.emails[0].value });
 
         if (!user) {
-          // Create new user if doesn't exist
           user = await User.create({
             name: profile.displayName,
             email: profile.emails[0].value,
-            password: 'google-auth', // You might want to handle this differently
+            password: 'google-auth-' + Math.random().toString(36).slice(-8),
             userType: 'student',
           });
         }
