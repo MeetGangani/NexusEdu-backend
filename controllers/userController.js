@@ -76,14 +76,39 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       path: '/',
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production'
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: false // Allow frontend to read this cookie
     });
+
+    // Redirect based on user type
+    let redirectPath;
+    switch (req.user.userType) {
+      case 'admin':
+        redirectPath = '/admin/dashboard';
+        break;
+      case 'institute':
+        redirectPath = '/institute/dashboard';
+        break;
+      case 'student':
+        redirectPath = '/student/dashboard';
+        break;
+      default:
+        redirectPath = '/';
+    }
+
+    // Redirect to the appropriate dashboard
+    const frontendURL = process.env.NODE_ENV === 'development' 
+      ? 'http://localhost:3000' 
+      : process.env.FRONTEND_URL;
+      
+    res.redirect(`${frontendURL}${redirectPath}`);
     
-    // Redirect to frontend
-    res.redirect('http://localhost:3000/?loginSuccess=true');
   } catch (error) {
     console.error('Google auth callback error:', error);
-    res.redirect('http://localhost:3000/login?error=auth_failed');
+    const frontendURL = process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3000'
+      : process.env.FRONTEND_URL;
+    res.redirect(`${frontendURL}/login?error=auth_failed`);
   }
 });
 
