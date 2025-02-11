@@ -75,13 +75,22 @@ const googleAuthCallback = asyncHandler(async (req, res) => {
     }), {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       path: '/',
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
     });
     
-    // Redirect to frontend with success parameter
-    res.redirect('http://localhost:3000/?loginSuccess=true');
+    // Redirect to frontend
+    const frontendURL = process.env.NODE_ENV === 'production' 
+      ? 'https://your-frontend-url.com'  // Replace with your production frontend URL
+      : 'http://localhost:3000';
+    
+    res.redirect(`${frontendURL}/?loginSuccess=true`);
   } catch (error) {
     console.error('Google auth callback error:', error);
-    res.redirect('http://localhost:3000/login?error=auth_failed');
+    const frontendURL = process.env.NODE_ENV === 'production'
+      ? 'https://your-frontend-url.com'  // Replace with your production frontend URL
+      : 'http://localhost:3000';
+    res.redirect(`${frontendURL}/login?error=auth_failed`);
   }
 });
 

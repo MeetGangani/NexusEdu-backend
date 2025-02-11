@@ -30,7 +30,43 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Session Setup (Fix MemoryStore Warning)
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://accounts.google.com",
+        "https://apis.google.com"
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://fonts.googleapis.com"
+      ],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      connectSrc: [
+        "'self'",
+        "https://accounts.google.com",
+        process.env.NODE_ENV === 'production' 
+          ? 'your-frontend-domain.com'
+          : 'http://localhost:3000'
+      ],
+      frameSrc: ["'self'", "https://accounts.google.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: []
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+}));
+
+// Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -39,24 +75,15 @@ app.use(session({
     mongoUrl: process.env.MONGO_URI,
     collectionName: 'sessions',
   }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
-        frameSrc: ["'self'", "https://accounts.google.com"],
-        imgSrc: ["'self'", "https://accounts.google.com", "data:", "https:"],
-        connectSrc: ["'self'", "https://accounts.google.com"],
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-  })
-);
-// Passport Initialization
+
+// Passport configuration
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -73,13 +100,29 @@ passport.deserializeUser(async (id, done) => {
     done(err, null);
   }
 });
+
+// CORS configuration
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', process.env.NODE_ENV === 'production' 
-    ? 'your-production-domain.com' 
-    : 'http://localhost:5173'); // or whatever port your frontend uses
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://your-frontend-domain.com' // Add your production frontend URL
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', true);
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   next();
 });
 
