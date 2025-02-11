@@ -14,6 +14,8 @@ import passport from 'passport';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import User from './models/userModel.js';
+import helmet from 'helmet';
+
 
 // Load environment variables
 dotenv.config();
@@ -38,7 +40,22 @@ app.use(session({
     collectionName: 'sessions',
   }),
 }));
-
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
+        frameSrc: ["'self'", "https://accounts.google.com"],
+        imgSrc: ["'self'", "https://accounts.google.com", "data:", "https:"],
+        connectSrc: ["'self'", "https://accounts.google.com"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 // Passport Initialization
 app.use(passport.initialize());
 app.use(passport.session());
@@ -55,6 +72,15 @@ passport.deserializeUser(async (id, done) => {
   } catch (err) {
     done(err, null);
   }
+});
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', process.env.NODE_ENV === 'production' 
+    ? 'your-production-domain.com' 
+    : 'http://localhost:5173'); // or whatever port your frontend uses
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', true);
+  next();
 });
 
 // API Routes
