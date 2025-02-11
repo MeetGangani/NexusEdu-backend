@@ -7,15 +7,14 @@ import {
   getMyResults,
   getExamResults
 } from '../controllers/examController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, studentOnly } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Student routes
-router.get('/available', protect, getAvailableExams);
-router.post('/start', protect, startExam);
-router.post('/submit', protect, submitExam);
-router.get('/my-results', protect, getMyResults);
+// Student routes - protected and student only
+router.get('/my-results', protect, studentOnly, getMyResults);
+router.post('/start', protect, studentOnly, startExam);
+router.post('/submit', protect, studentOnly, submitExam);
 
 // Institute routes
 router.get('/results/:examId', protect, getExamResults);

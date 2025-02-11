@@ -8,23 +8,16 @@ const protect = asyncHandler(async (req, res, next) => {
 
   if (!token) {
     res.status(401);
-    throw new Error('Access denied. No token provided.');
+    throw new Error('Not authorized, no token');
   }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.userId).select('-password');
-
-    if (!req.user) {
-      res.status(401);
-      throw new Error('User not found.');
-    }
-
     next();
   } catch (error) {
-    console.error('JWT verification failed:', error);
     res.status(401);
-    throw new Error('Invalid or expired token.');
+    throw new Error('Not authorized, token failed');
   }
 });
 
@@ -42,6 +35,13 @@ const roleAuthorization = (allowedRoles) => {
 // Role-based access middleware
 const adminOnly = roleAuthorization(['admin']);
 const instituteOnly = roleAuthorization(['institute']);
-const studentOnly = roleAuthorization(['student']);
+const studentOnly = asyncHandler(async (req, res, next) => {
+  if (req.user && req.user.userType === 'student') {
+    next();
+  } else {
+    res.status(403);
+    throw new Error('Not authorized, student only');
+  }
+});
 
 export { protect, adminOnly, instituteOnly, studentOnly };

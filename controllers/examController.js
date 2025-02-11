@@ -86,7 +86,7 @@ const startExam = asyncHandler(async (req, res) => {
       logger.info('Preparing exam data for student...');
       // Return exam data without correct answers
       const sanitizedQuestions = decryptedData.questions.map(q => ({
-        text: q.question,
+        question: q.question,
         options: q.options
       }));
 
